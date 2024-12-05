@@ -24,5 +24,7 @@ data = [
     {"name": "Bob", "email": "invalid-email"},
     {"name": "Charlie", "email": "charlie@example.com"}
 ]
+# data_validate = {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"}
+# print(mapper.validate(data_validate))
 processed_data = mapper.process(data)
 print(processed_data)
