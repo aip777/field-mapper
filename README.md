@@ -4,14 +4,14 @@ Field Mapper is a Python library for validating, mapping, and transforming data 
 
 ### Installation
 Install the library using pip
-```bat
+```bash
 pip install field-mapper
 ```
 
 ### Quick Start
 1. Define Fields
 Create a dictionary to define the rules for your data fields.
-```bat
+```python
 fields = {
     "name": {"type": str, "max_length": 50},
     "email": {"type": str, "max_length": 100, "custom": validate_email},
@@ -21,7 +21,7 @@ fields = {
 
 2. Prepare Data
 The input should be a list of dictionaries.
-```bat
+```python
 data = [
     {"name": "Alice", "email": "alice@example.com", "phone": "123456789"},
     {"name": "Bob", "email": "invalid-email", "phone": "987654321"},
@@ -30,31 +30,37 @@ data = [
 
 3. Create a Field Mapper Instance
 Initialize the FieldMapper class.
-```bat
+```python
 from field_mapper.mapper import FieldMapper
 mapper = FieldMapper(fields)
 ```
 
 4. Data Process
 Use the process method to check and transform the data.
-```bat
-try:  
-    processed_data = mapper.process(data)  
-    print(processed_data)  
-except Exception as exc:  
-    print(exc)  
+```python
+from field_mapper.mapper import FieldMapper
 
-#Output: 
-[
-    {"name": "Alice", "email": "alice@example.com", "phone": "123456789"}
+fields = {
+    "name": {"type": str, "max_length": 50},
+    "email": {"type": str, "max_length": 100, "custom": validate_email},
+    "phone": {"type": str, "max_length": 15, "required": False},
+}
+
+data = [
+    {"name": "Alice", "email": "alice@example.com", "phone": "123456789"},
+    {"name": "Bob", "email": "invalid-email", "phone": "987654321"},
 ]
+
+mapper = FieldMapper(fields)
+processed_data = mapper.process(data)
+print(processed_data)
 
 ```
 
-Custom Validation
+5. Custom Validation
 Define custom validation logic for specific fields.
 
-```bat
+```python
 def validate_email(value):  
     import re  
     if not re.match(r"[^@]+@[^@]+\.[^@]+", value):  
@@ -67,10 +73,10 @@ fields = {
 
 ```
 
-Optional Fields
+6. Optional Fields
 Mark fields as optional with required: False. 
 If check_optional_fields=True is set, their presence is mandatory but values can be empty:
-```bat
+```python
 fields = {
     "phone": {"type": str, "max_length": 15, "required": False},
 }
@@ -79,7 +85,7 @@ mapper = FieldMapper(fields, check_optional_fields=True)
 ```
 
 ### Example usage
-```bat
+```python
 from field_mapper.mapper import FieldMapper
 
 def validate_email(value: str) -> bool:
