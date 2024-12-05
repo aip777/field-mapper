@@ -28,14 +28,7 @@ data = [
 ]
 ```
 
-3. Create a Field Mapper Instance
-Initialize the FieldMapper class.
-```python
-from field_mapper.mapper import FieldMapper
-mapper = FieldMapper(fields)
-```
-
-4. Data Process
+3. Data Process
 Use the process method to check and transform the data.
 ```python
 from field_mapper.mapper import FieldMapper
@@ -57,7 +50,7 @@ print(processed_data)
 
 ```
 
-5. Custom Validation
+4. Custom Validation
 Define custom validation logic for specific fields.
 
 ```python
@@ -73,7 +66,7 @@ fields = {
 
 ```
 
-6. Optional Fields
+5. Optional Fields
 Mark fields as optional with required: False. 
 If check_optional_fields=True is set, their presence is mandatory but values can be empty:
 ```python
