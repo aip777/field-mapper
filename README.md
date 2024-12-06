@@ -48,6 +48,7 @@ data = [
 mapper = FieldMapper(fields)
 processed_data = mapper.process(data)
 print(processed_data)
+print(mapper.error)
 
 ```
 
@@ -108,5 +109,5 @@ data = [
 ]
 processed_data = mapper.process(data)
 print(processed_data)
-
+print(mapper.error)
 ```
