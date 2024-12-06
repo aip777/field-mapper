@@ -112,7 +112,7 @@ fields = {
 
 ```
 
-5. Required Value
+6. Required Value
 If required_value=True is set, their presence is mandatory and values can't be empty. 
 ```python
 fields = {"email": {"type": str, "max_length": 100, "required_field": True, "required_value":True}
