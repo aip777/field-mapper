@@ -30,8 +30,9 @@ data = [
 
 3. Data Process
 Use the process method to check and transform the data.
+
 ```python
-from field_mapper.mapper import FieldMapper
+from field_mapper import FieldMapper
 
 fields = {
     "name": {"type": str, "max_length": 50},
@@ -78,11 +79,14 @@ mapper = FieldMapper(fields, check_optional_fields=True)
 ```
 
 ### Example usage
+
 ```python
-from field_mapper.mapper import FieldMapper
+from field_mapper import FieldMapper
+
 
 def validate_email(value: str) -> bool:
     return "@" in value and "." in value
+
 
 fields = {
     "name": {"type": str, "max_length": 50, "required": True},

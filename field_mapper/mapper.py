@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Callable, Union, Type
 
-from exceptions.exception import FieldValidationError, MissingFieldError, InvalidTypeError, InvalidLengthError, \
+from field_mapper.exc.exception import FieldValidationError, MissingFieldError, InvalidTypeError, InvalidLengthError, \
     CustomValidationError
 
 
@@ -72,7 +72,7 @@ class FieldMapper:
 
     def process(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Process a list of data entries, validating and field_mapper fields.
+        Process a list of data entries, validating and src fields.
         """
         if not isinstance(data, list):
             raise ValueError("Input data must be a list of dictionaries.")
