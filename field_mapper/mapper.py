@@ -17,34 +17,40 @@ class FieldMapper:
         missing = []
         type_errors = []
         length_errors = []
+        value_errors = []
         custom_errors = []
 
         for field, constraints in self.fields.items():
-            is_required = constraints.get("required", True)
+            is_required_field = constraints.get("required_field", True)
+            is_required_value = constraints.get("required_value", True)
             expected_type = constraints.get("type")
             max_length = constraints.get("max_length")
             custom_validator = constraints.get("custom")
             value = data.get(field)
 
             # Check for missing fields
-            if is_required and value is None:
+            if is_required_field and field not in data:
                 missing.append(field)
                 continue
 
             # Skip validation for optional fields if not present
-            if not is_required and value is None:
+            if not is_required_field and value is None:
                 continue
 
+            # Check required_value if specified
+            if is_required_value and not value and value != 0:
+                value_errors.append(field)
+
             # Validate type
-            if expected_type and not isinstance(value, expected_type):
+            if value is not None and expected_type and not isinstance(value, expected_type):
                 type_errors.append(field)
 
             # Validate max length for strings
-            if max_length and isinstance(value, str) and len(value) > max_length:
+            if value is not None and max_length and isinstance(value, str) and len(value) > max_length:
                 length_errors.append(field)
 
             # Apply custom validation if defined
-            if custom_validator and callable(custom_validator):
+            if value is not None and custom_validator and callable(custom_validator):
                 try:
                     if not custom_validator(value):
                         custom_errors.append(field)
@@ -53,6 +59,8 @@ class FieldMapper:
 
         if missing:
             raise MissingFieldError("Missing required fields", missing, data)
+        if value_errors:
+            raise ValueError("Required fields must have non-empty values", value_errors)
         if type_errors:
             raise InvalidTypeError("Invalid field types", type_errors, data)
         if length_errors:
@@ -84,7 +92,7 @@ class FieldMapper:
                 mapped_data = self.map(entry)
                 result.append(mapped_data)
             except FieldValidationError as exc:
-                self.error.append(exc)
+                self.error.append(f"(Error Details: {exc} | Validation Error for data: {exc.problematic_data})")
                 print(f"Error Details: {exc} | Validation Error for data: {exc.problematic_data}")
         return result
 
