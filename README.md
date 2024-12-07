@@ -119,7 +119,7 @@ fields = {"email": {"type": str, "max_length": 100, "required_field": True, "req
 
 ```
 
-6. Skip Duplicates Data
+7. Skip Duplicates Data
 If skip_duplicate=True is set, Skip duplicate data. Raises:DuplicatesDataError: If duplicate entries are found. 
 ```python
 from field_mapper.mapper import FieldMapper
