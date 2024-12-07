@@ -22,11 +22,11 @@ data = [
     {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
     {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0},
     {"name": "Charlie", "email": "charlie@example.com", "phone": "345345323", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "345345223", "income":0}
+    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
 ]
 mapper = FieldMapper(fields, field_map)
 # data_validate = {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"}
 # print(mapper.validate(data_validate))
-processed_data = mapper.process(data, check_duplicate=True)
+processed_data = mapper.process(data, skip_duplicate=True)
 print("Output:", processed_data)
 print("Error:",mapper.error)
