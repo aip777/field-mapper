@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Callable, Union, Type
 
 from field_mapper.exc.exception import FieldValidationError, MissingFieldError, InvalidTypeError, InvalidLengthError, \
-    CustomValidationError
+    CustomValidationError, DuplicatesDataError
 
 
 class FieldMapper:
@@ -77,13 +77,37 @@ class FieldMapper:
             for key, value in data.items()
             if key in self.field_map
         }
-
-    def process(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def check_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Process a list of data entries, validating and src fields.
+        Ensure no duplicate entries exist in the data. Raises:ValueError: If duplicate entries are found.
+        """
+        seen = set()
+        unique_data = []
+        duplicates_data = []
+
+        for entry in data:
+            entry_tuple = frozenset(entry.items())
+            if entry_tuple in seen:
+                duplicates_data.append(entry)
+            seen.add(entry_tuple)
+            unique_data.append(entry)
+        if duplicates_data:
+            raise DuplicatesDataError(message="Duplicate data detected", data=duplicates_data)
+        return unique_data
+    def process(self, data: List[Dict[str, Any]], check_duplicate: bool = False) -> List[Dict[str, Any]]:
+        """
+        Process a list of data entries, validating and mapping fields.
         """
         if not isinstance(data, list):
             raise ValueError("Input data must be a list of dictionaries.")
+
+        try:
+            if check_duplicate:
+                data = self.check_duplicates(data)
+        except FieldValidationError as exc:
+            self.error.append(f"(Error Details: {exc} | Validation Error for data: {exc.problematic_data})")
+            print(f"Error Details: {exc} | Validation Error for data: {exc.problematic_data}")
+            return
 
         result = []
         for entry in data:
