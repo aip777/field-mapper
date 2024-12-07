@@ -77,7 +77,8 @@ class FieldMapper:
             for key, value in data.items()
             if key in self.field_map
         }
-    def check_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+
+    def skip_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         Ensure no duplicate entries exist in the data. Raises:ValueError: If duplicate entries are found.
         """
@@ -94,20 +95,19 @@ class FieldMapper:
         if duplicates_data:
             raise DuplicatesDataError(message="Duplicate data detected", data=duplicates_data)
         return unique_data
-    def process(self, data: List[Dict[str, Any]], check_duplicate: bool = False) -> List[Dict[str, Any]]:
+
+    def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
         """
         Process a list of data entries, validating and mapping fields.
         """
         if not isinstance(data, list):
             raise ValueError("Input data must be a list of dictionaries.")
 
-        try:
-            if check_duplicate:
-                data = self.check_duplicates(data)
-        except FieldValidationError as exc:
-            self.error.append(f"(Error Details: {exc} | Validation Error for data: {exc.problematic_data})")
-            print(f"Error Details: {exc} | Validation Error for data: {exc.problematic_data}")
-            return
+        if skip_duplicate:
+            try:
+                data = self.skip_duplicates(data)
+            except FieldValidationError as exc:
+                self._log_error(exc)
 
         result = []
         for entry in data:
@@ -116,7 +116,24 @@ class FieldMapper:
                 mapped_data = self.map(entry)
                 result.append(mapped_data)
             except FieldValidationError as exc:
-                self.error.append(f"(Error Details: {exc} | Validation Error for data: {exc.problematic_data})")
-                print(f"Error Details: {exc} | Validation Error for data: {exc.problematic_data}")
+                self._log_error(exc)
         return result
 
+    def _log_error(self, exc: FieldValidationError) -> None:
+        """
+        Log validation error details.
+        """
+        error_details = {
+            "Error Type": exc.__class__.__name__,
+            "Message": str(exc),
+            "Problematic Data": exc.problematic_data,
+        }
+        formatted_error = (
+            f"--- Error Details ---\n"
+            f"Type: {error_details['Error Type']}\n"
+            f"Message: {error_details['Message']}\n"
+            f"Data: {error_details['Problematic Data']}\n"
+            f"---------------------"
+        )
+        self.error.append(formatted_error)
+        print(formatted_error)
