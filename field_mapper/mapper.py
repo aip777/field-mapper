@@ -80,7 +80,7 @@ class FieldMapper:
 
     def skip_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        Ensure no duplicate entries exist in the data. Raises:ValueError: If duplicate entries are found.
+        Skip duplicate data. Raises:DuplicatesDataError: If duplicate entries are found.
         """
         seen = set()
         unique_data = []
