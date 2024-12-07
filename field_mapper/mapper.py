@@ -58,15 +58,15 @@ class FieldMapper:
                     custom_errors.append(field)
 
         if missing:
-            raise MissingFieldError("Missing required fields", missing, data)
+            raise MissingFieldError("Missing required fields", missing, [data])
         if value_errors:
             raise ValueError("Required fields must have non-empty values", value_errors)
         if type_errors:
-            raise InvalidTypeError("Invalid field types", type_errors, data)
+            raise InvalidTypeError("Invalid field types", type_errors, [data])
         if length_errors:
-            raise InvalidLengthError("Fields exceeding max length", length_errors, data)
+            raise InvalidLengthError("Fields exceeding max length", length_errors, [data])
         if custom_errors:
-            raise CustomValidationError("Custom validation failed", custom_errors, data)
+            raise CustomValidationError("Custom validation failed", custom_errors, [data])
 
     def map(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -93,7 +93,7 @@ class FieldMapper:
             seen.add(entry_tuple)
             unique_data.append(entry)
         if duplicates_data:
-            raise DuplicatesDataError(message="Duplicate data detected", data=duplicates_data)
+            raise DuplicatesDataError("Duplicate data detected", problematic_data=duplicates_data)
         return unique_data
 
     def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:

@@ -18,11 +18,11 @@ fields = {
     "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
 }
 data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "345345323", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
+    {"name": "Alice", "email": "alice@example.com", "phone": "777777"},
+    {"name": "Bob", "email": "charlieexample.com", "phone": "999999", "income":0},
+    {"name": "Charlie", "email": "charlie@example.com", "phone": "888888", "income":0},
+    {"name": "Charlie", "email": "charlie@example.com", "phone": "444444", "income":0},
+    {"name": "Charlie", "email": "charlie@example.com", "phone": "444444", "income":0}
 ]
 mapper = FieldMapper(fields, field_map)
 # data_validate = {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"}
