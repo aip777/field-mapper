@@ -14,12 +14,8 @@ class FieldMapper:
         """
         Validate fields based on the constraints provided in the `fields` dictionary.
         """
-        missing = []
-        type_errors = []
-        length_errors = []
-        value_errors = []
-        custom_errors = []
 
+        errors = []
         for field, constraints in self.fields.items():
             is_required_field = constraints.get("required_field", True)
             is_required_value = constraints.get("required_value", True)
@@ -30,43 +26,35 @@ class FieldMapper:
 
             # Check for missing fields
             if is_required_field and field not in data:
-                missing.append(field)
+                errors.append(f"Missing required field: {field}")
                 continue
 
             # Skip validation for optional fields if not present
             if not is_required_field and value is None:
                 continue
 
-            # Check required_value if specified
+            # Check if the value is missing when required
             if is_required_value and not value and value != 0:
-                value_errors.append(field)
+                errors.append(f"Required value missing or invalid for field: {field}")
 
             # Validate type
             if value is not None and expected_type and not isinstance(value, expected_type):
-                type_errors.append(field)
+                errors.append(f"Invalid type for field: {field}")
 
             # Validate max length for strings
             if value is not None and max_length and isinstance(value, str) and len(value) > max_length:
-                length_errors.append(field)
+                errors.append(f"Field '{field}' exceeds max length of {max_length} characters")
 
             # Apply custom validation if defined
             if value is not None and custom_validator and callable(custom_validator):
                 try:
                     if not custom_validator(value):
-                        custom_errors.append(field)
+                        errors.append(f"Custom validation failed for field: {field}")
                 except Exception as e:
-                    custom_errors.append(field)
+                    errors.append(f"Error during custom validation for field: {field} ({str(e)})")
 
-        if missing:
-            raise MissingFieldError("Missing required fields", missing, [data])
-        if value_errors:
-            raise ValueError("Required fields must have non-empty values", value_errors)
-        if type_errors:
-            raise InvalidTypeError("Invalid field types", type_errors, [data])
-        if length_errors:
-            raise InvalidLengthError("Fields exceeding max length", length_errors, [data])
-        if custom_errors:
-            raise CustomValidationError("Custom validation failed", custom_errors, [data])
+        if errors:
+            raise FieldValidationError("Validation errors occurred", errors, [data])
 
     def map(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -123,16 +111,12 @@ class FieldMapper:
         """
         Log validation error details.
         """
-        error_details = {
-            "Error Type": exc.__class__.__name__,
-            "Message": str(exc),
-            "Problematic Data": exc.problematic_data,
-        }
+        formatted_issues = "; ".join(exc.issues)  # Join issues into a single line
         formatted_error = (
             f"--- Error Details ---\n"
-            f"Type: {error_details['Error Type']}\n"
-            f"Message: {error_details['Message']}\n"
-            f"Data: {error_details['Problematic Data']}\n"
+            f"Type: {exc.__class__.__name__}\n"
+            f"Message: {formatted_issues}\n"
+            f"Data: {exc.problematic_data}\n"
             f"---------------------"
         )
         self.error.append(formatted_error)

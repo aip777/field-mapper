@@ -4,11 +4,10 @@ from typing import List, Dict, Any
 class FieldValidationError(Exception):
     """Base exception for field validation errors."""
 
-    def __init__(self, message: str, fields: List[str] = None, problematic_data: List[Dict[str, Any]] = None):
-        self.fields = fields
+    def __init__(self, message: str, issues: List[str] = None, problematic_data: List[Dict[str, Any]] = None):
+        super().__init__(message)
+        self.issues = issues
         self.problematic_data = problematic_data
-        if self.fields:
-            super().__init__(f"{message}: {fields}")
 
 
 class MissingFieldError(FieldValidationError):
