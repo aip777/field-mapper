@@ -12,7 +12,7 @@ class FieldMapper:
 
     def validate(self, data: Dict[str, Any]) -> None:
         """
-        Validate fields based on the constraints provided in the `fields` dictionary.
+        Validate fields in a single data dictionary based on the defined rules in `fields`.
         """
 
         errors = []
@@ -56,15 +56,47 @@ class FieldMapper:
         if errors:
             raise FieldValidationError("Validation errors occurred", errors, [data])
 
-    def map(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_value(self, data: Dict[str, Any], position: str) -> Any:
         """
-        Map internal fields to the target field names.
+        Extracts a value from nested data using dot notation and indexing,
+        supporting dynamic lists with '[]'.
         """
-        return {
-            self.field_map.get(key, key): value
-            for key, value in data.items()
-            if key in self.field_map
-        }
+        keys = position.split('.')
+        value = data
+        for key in keys:
+            if '[' in key and ']' in key:
+                base_key, index = key[:-1].split('[')
+                value = value.get(base_key, [])
+                if index == '':
+                    continue
+                else:
+                    value = value[int(index)] if len(value) > int(index) else None
+            else:
+                if isinstance(value, list):
+                    value = [item.get(key) for item in value if isinstance(item, dict)]
+                else:
+                    value = value.get(key) if isinstance(value, dict) else None
+            if value is None:
+                break
+        return value
+
+    def map_fields(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Map the extracted fields to their target field names based on `field_map`.
+        """
+        mapped_data = {}
+        for field, target_field in self.field_map.items():
+            if '[]' in field:
+                base_field = field.split('[]')[0]
+                subfield = field.split('.')[-1]
+                extracted_value = self.extract_value(data, base_field)
+                if isinstance(extracted_value, list):
+                    extracted_value = [item.get(subfield) for item in extracted_value if isinstance(item, dict)]
+            else:
+                extracted_value = self.extract_value(data, field)
+
+            mapped_data[target_field] = extracted_value
+        return mapped_data
 
     def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
         """
@@ -79,7 +111,7 @@ class FieldMapper:
                 result = []
                 for entry in data:
                     self.validate(entry)
-                    mapped_data = self.map(entry)
+                    mapped_data = self.map_fields(entry)
                     result.append(mapped_data)
                 return result
 
@@ -90,7 +122,7 @@ class FieldMapper:
             for entry in data:
                 try:
                     self.validate(entry)
-                    mapped_data = self.map(entry)
+                    mapped_data = self.map_fields(entry)
                     result.append(mapped_data)
                 except FieldValidationError as exc:
                     self._log_error(exc)
@@ -115,12 +147,12 @@ class FieldMapper:
 class DuplicateDataHandler:
     """Handles operations related to duplicate detection in data."""
 
-    def _convert_to_hashable(self, obj: Any) -> Any:
+    def _make_hashable(self, obj: Any) -> Any:
         """Recursively converts mutable structures into immutable ones."""
         if isinstance(obj, dict):
-            return frozenset((key, self._convert_to_hashable(value)) for key, value in obj.items())
+            return frozenset((key, self._make_hashable(value)) for key, value in obj.items())
         elif isinstance(obj, list):
-            return tuple(self._convert_to_hashable(item) for item in obj)
+            return tuple(self._make_hashable(item) for item in obj)
         return obj
 
     def remove_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -130,7 +162,7 @@ class DuplicateDataHandler:
         duplicate_entries = []
 
         for entry in data:
-            entry_hashable = self._convert_to_hashable(entry)
+            entry_hashable = self._make_hashable(entry)
             if entry_hashable in seen_hashes:
                 duplicate_entries.append(entry)
             else:
