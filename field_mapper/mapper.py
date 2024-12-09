@@ -66,24 +66,6 @@ class FieldMapper:
             if key in self.field_map
         }
 
-    def skip_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """
-        Skip duplicate data. Raises:DuplicatesDataError: If duplicate entries are found.
-        """
-        seen = set()
-        unique_data = []
-        duplicates_data = []
-
-        for entry in data:
-            entry_tuple = frozenset(entry.items())
-            if entry_tuple in seen:
-                duplicates_data.append(entry)
-            seen.add(entry_tuple)
-            unique_data.append(entry)
-        if duplicates_data:
-            raise DuplicatesDataError("Duplicate data detected", problematic_data=duplicates_data)
-        return unique_data
-
     def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
         """
         Process a list of data entries, validating and mapping fields.
@@ -93,19 +75,16 @@ class FieldMapper:
 
         if skip_duplicate:
             try:
-                data = self.skip_duplicates(data)
-            except FieldValidationError as exc:
-                self._log_error(exc)
+                data = DuplicateDataHandler().remove_duplicates(data)
+                result = []
+                for entry in data:
+                    self.validate(entry)
+                    mapped_data = self.map(entry)
+                    result.append(mapped_data)
+                return result
 
-        result = []
-        for entry in data:
-            try:
-                self.validate(entry)
-                mapped_data = self.map(entry)
-                result.append(mapped_data)
             except FieldValidationError as exc:
                 self._log_error(exc)
-        return result
 
     def _log_error(self, exc: FieldValidationError) -> None:
         """
@@ -121,3 +100,35 @@ class FieldMapper:
         )
         self.error.append(formatted_error)
         print(formatted_error)
+
+
+class DuplicateDataHandler:
+    """Handles operations related to duplicate detection in data."""
+
+    def _convert_to_hashable(self, obj: Any) -> Any:
+        """Recursively converts mutable structures into immutable ones."""
+        if isinstance(obj, dict):
+            return frozenset((key, self._convert_to_hashable(value)) for key, value in obj.items())
+        elif isinstance(obj, list):
+            return tuple(self._convert_to_hashable(item) for item in obj)
+        return obj
+
+    def remove_duplicates(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Removes duplicate entries from the provided data list."""
+        seen_hashes = set()
+        unique_entries = []
+        duplicate_entries = []
+
+        for entry in data:
+            entry_hashable = self._convert_to_hashable(entry)
+            if entry_hashable in seen_hashes:
+                duplicate_entries.append(entry)
+            else:
+                seen_hashes.add(entry_hashable)
+                unique_entries.append(entry)
+
+        if duplicate_entries:
+            message = 'Duplicate data detected'
+            raise DuplicatesDataError(message,[message], problematic_data=duplicate_entries)
+
+        return unique_entries
