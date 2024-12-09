@@ -2,9 +2,16 @@ from typing import List, Dict, Any
 
 
 class FieldValidationError(Exception):
-    """Base exception for field validation errors."""
+    """Custom Base exception for field validation errors."""
+    def __init__(self, message: str, issues: List[str], problematic_data: Any):
+        super().__init__(message)
+        self.issues = issues
+        self.problematic_data = problematic_data
 
-    def __init__(self, message: str, issues: List[str] = None, problematic_data: List[Dict[str, Any]] = None):
+
+class DuplicateDataError(Exception):
+    """Custom exception for duplicate data errors."""
+    def __init__(self, message: str, issues: List[str], problematic_data: Any):
         super().__init__(message)
         self.issues = issues
         self.problematic_data = problematic_data
