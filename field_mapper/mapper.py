@@ -85,6 +85,16 @@ class FieldMapper:
 
             except FieldValidationError as exc:
                 self._log_error(exc)
+        else:
+            result = []
+            for entry in data:
+                try:
+                    self.validate(entry)
+                    mapped_data = self.map(entry)
+                    result.append(mapped_data)
+                except FieldValidationError as exc:
+                    self._log_error(exc)
+            return result
 
     def _log_error(self, exc: FieldValidationError) -> None:
         """
