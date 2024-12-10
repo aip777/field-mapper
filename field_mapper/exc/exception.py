@@ -3,18 +3,15 @@ from typing import List, Dict, Any
 
 class FieldValidationError(Exception):
     """Custom Base exception for field validation errors."""
-    def __init__(self, message: str, issues: List[str], problematic_data: Any):
+    def __init__(self, message: str, issues: Any = None, problematic_data: Any = None):
         super().__init__(message)
         self.issues = issues
         self.problematic_data = problematic_data
 
 
-class DuplicateDataError(Exception):
+class DuplicateDataError(FieldValidationError):
     """Custom exception for duplicate data errors."""
-    def __init__(self, message: str, issues: List[str], problematic_data: Any):
-        super().__init__(message)
-        self.issues = issues
-        self.problematic_data = problematic_data
+    pass
 
 
 class MissingFieldError(FieldValidationError):
@@ -36,7 +33,3 @@ class CustomValidationError(FieldValidationError):
     """Exception raised when custom validation fails."""
     pass
 
-
-class DuplicatesDataError(FieldValidationError):
-    """Exception raised If duplicate entries are found."""
-    pass
