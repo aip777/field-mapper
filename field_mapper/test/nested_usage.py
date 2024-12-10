@@ -1,5 +1,9 @@
 from field_mapper.mapper import FieldMapper
 
+def validate_email(value: str) -> bool:
+    return "@" in value and "." in value
+# To-DO Validate function not working properly
+
 field_map = {
     "name": "full_name",
     "email[0]": "contact_email",
@@ -30,8 +34,6 @@ fields = {
     "income": {"type": list, "position": "income[0].Jan", "required_field": True, "required_value": True},
     "year_salary": {"type": list, "position": "year_salary[].year", "required_field": True, "required_value": True}
 }
-
-
 
 mapper = FieldMapper(fields=fields, field_map=field_map)
 processed_data = mapper.process(data, skip_duplicate=True)
