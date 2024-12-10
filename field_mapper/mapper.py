@@ -1,8 +1,6 @@
 from typing import List, Dict, Any, Callable, Union, Type
 
-from field_mapper.exc.exception import FieldValidationError, MissingFieldError, InvalidTypeError, InvalidLengthError, \
-    CustomValidationError, DuplicatesDataError
-
+from field_mapper.exc.exception import FieldValidationError, DuplicateDataError
 
 class FieldMapper:
     def __init__(self, fields: Dict[str, Dict[str, Union[Type, int, Callable, bool]]], field_map: Dict[str, str]):
@@ -171,6 +169,6 @@ class DuplicateDataHandler:
 
         if duplicate_entries:
             message = 'Duplicate data detected'
-            raise DuplicatesDataError(message,[message], problematic_data=duplicate_entries)
+            raise DuplicateDataError(message,[message], problematic_data=duplicate_entries)
 
         return unique_entries
