@@ -96,15 +96,12 @@ class FieldMapper:
             mapped_data[target_field] = extracted_value
         return mapped_data
 
-    def process(self, data: Union[Dict[str, any],List[Dict[str, Any]]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
+    def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
         """
-        Process a list or single data entries, validating and mapping fields.
+        Process a list of data entries, validating and mapping fields.
         """
-        if isinstance(data, dict):
-            data=[data]
-        elif not (isinstance(data, list) and all(isinstance(item, dict) for item in data)):
-            raise ValueError("Input data must be a dictionary or list of dictionaries.")
-
+        if not isinstance(data, list):
+            raise ValueError("Input data must be a list of dictionaries.")
 
         try:
             if skip_duplicate:
