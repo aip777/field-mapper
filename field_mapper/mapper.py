@@ -1,16 +1,25 @@
-from typing import List, Dict, Any, Callable, Union, Type
+from typing import List, Dict, Any, Callable, Union, Type, Optional
 
 from field_mapper.exc.exception import FieldValidationError, DuplicateDataError
 
 class FieldMapper:
-    def __init__(self, fields: Dict[str, Dict[str, Union[Type, int, Callable, bool]]], field_map: Dict[str, str]):
+    def __init__(self, fields: Dict[str, Dict[str, Union[Type, int, Callable, bool, str]]], field_map: Dict[str, str]):
+        """
+        Initialize FieldMapper with field definitions and mapping configuration.
+
+        Args:
+            fields: Dictionary defining validation rules for each field.
+                   Supports: type, max_length, required_field, required_value, custom, position
+            field_map: Dictionary mapping source field names to target field names
+        """
         self.fields = fields
         self.field_map = field_map
-        self.error = []
+        self.error: List[str] = []
 
     def validate(self, data: Dict[str, Any]) -> None:
         """
         Validate fields in a single data dictionary based on the defined rules in `fields`.
+        Supports both direct field access and nested field access via 'position' parameter.
         """
 
         errors = []
@@ -20,11 +29,19 @@ class FieldMapper:
             expected_type = constraints.get("type")
             max_length = constraints.get("max_length")
             custom_validator = constraints.get("custom")
-            value = data.get(field)
+            position = constraints.get("position")
+
+            # Use position if specified, otherwise use field name directly
+            if position:
+                value = self.extract_value(data, position)
+                field_path = position
+            else:
+                value = data.get(field)
+                field_path = field
 
             # Check for missing fields
-            if is_required_field and field not in data:
-                errors.append(f"Missing required field: {field}")
+            if is_required_field and field not in data and not position:
+                errors.append(f"Missing required field: '{field}'")
                 continue
 
             # Skip validation for optional fields if not present
@@ -32,27 +49,47 @@ class FieldMapper:
                 continue
 
             # Check if the value is missing when required
-            if is_required_value and not value and value != 0:
-                errors.append(f"Required value missing or invalid for field: {field}")
+            # Properly handle falsy values: 0, False, empty string, empty list, empty dict
+            if is_required_value and self._is_empty_value(value):
+                errors.append(f"Required value missing or empty for field: '{field}' (path: '{field_path}')")
 
             # Validate type
             if value is not None and expected_type and not isinstance(value, expected_type):
-                errors.append(f"Invalid type for field: {field}")
+                actual_type = type(value).__name__
+                expected_type_name = expected_type.__name__ if hasattr(expected_type, '__name__') else str(expected_type)
+                errors.append(f"Invalid type for field '{field}': expected {expected_type_name}, got {actual_type}")
 
-            # Validate max length for strings
-            if value is not None and max_length and isinstance(value, str) and len(value) > max_length:
-                errors.append(f"Field '{field}' exceeds max length of {max_length} characters")
+            # Validate max length for strings, lists, and other sequences
+            if value is not None and max_length:
+                if hasattr(value, '__len__'):
+                    if len(value) > max_length:
+                        value_type = type(value).__name__
+                        errors.append(f"Field '{field}' ({value_type}) exceeds max length of {max_length} (current: {len(value)})")
 
             # Apply custom validation if defined
             if value is not None and custom_validator and callable(custom_validator):
                 try:
                     if not custom_validator(value):
-                        errors.append(f"Custom validation failed for field: {field}")
+                        errors.append(f"Custom validation failed for field: '{field}'")
                 except Exception as e:
-                    errors.append(f"Error during custom validation for field: {field} ({str(e)})")
+                    errors.append(f"Custom validation error for field '{field}': {str(e)}")
 
         if errors:
             raise FieldValidationError("Validation errors occurred", errors, [data])
+
+    def _is_empty_value(self, value: Any) -> bool:
+        """
+        Check if a value should be considered empty.
+        Returns True for None, empty strings, empty collections.
+        Returns False for 0, False, and other falsy but valid values.
+        """
+        if value is None:
+            return True
+        if isinstance(value, str) and value == "":
+            return True
+        if isinstance(value, (list, dict, tuple, set)) and len(value) == 0:
+            return True
+        return False
 
     def extract_value(self, data: Dict[str, Any], position: str) -> Any:
         """
@@ -99,6 +136,9 @@ class FieldMapper:
     def process(self, data: List[Dict[str, Any]], skip_duplicate: bool = False) -> List[Dict[str, Any]]:
         """
         Process a list of data entries, validating and mapping fields.
+
+        Returns:
+            List of successfully mapped dictionaries. Returns empty list if validation fails.
         """
         if not isinstance(data, list):
             raise ValueError("Input data must be a list of dictionaries.")
@@ -115,10 +155,11 @@ class FieldMapper:
 
         except FieldValidationError as exc:
             self._log_error(exc)
+            return []
 
     def _log_error(self, exc: FieldValidationError) -> None:
         """
-        Log validation error details.
+        Log validation error details to the error list.
         """
         formatted_issues = "; ".join(exc.issues)  # Join issues into a single line
         formatted_error = (
@@ -129,7 +170,6 @@ class FieldMapper:
             f"---------------------"
         )
         self.error.append(formatted_error)
-        print(formatted_error)
 
 
 class DuplicateDataHandler:
