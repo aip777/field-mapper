@@ -69,15 +69,28 @@ print(mapper.error)
 ```
 
 4. Custom Validation
-Define custom validation logic for specific fields.
+Define custom validation logic for specific fields. Custom validators can either:
+- Return `True` if valid, `False` if invalid
+- Raise an exception with a descriptive error message
 
+**Option 1: Return boolean**
 ```python
-def validate_email(value):  
-    import re  
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", value):  
-        raise ValueError(f"Invalid email address: {value}")  
+def validate_email(value: str) -> bool:
+    return "@" in value and "." in value
+```
 
-#Add the custom validator in the field definition:
+**Option 2: Raise exception**
+```python
+def validate_email(value):
+    import re
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+        raise ValueError(f"Invalid email address: {value}")
+```
+
+Add the custom validator in the field definition:
+```python
+from field_mapper import FieldMapper
+
 field_map = {
     "name": "full_name",
     "email": "contact_email",
@@ -88,12 +101,12 @@ fields = {
     "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
     "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True, "custom": validate_email},
     "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
+    "income": {"type": int, "required_field": True, "required_value":False}
 }
 
 data = [
     {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
+    {"name": "Bob", "email": "bob@invalid", "phone": "453543535", "income":0},
     {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
 ]
 mapper = FieldMapper(fields, field_map)
@@ -120,9 +133,9 @@ fields = {"email": {"type": str, "max_length": 100, "required_field": True, "req
 ```
 
 7. Skip Duplicates Data
-If skip_duplicate=True is set, Skip duplicate data. Raises:DuplicatesDataError: If duplicate entries are found. 
+If skip_duplicate=True is set, Skip duplicate data. Raises:DuplicateDataError: If duplicate entries are found.
 ```python
-from field_mapper.mapper import FieldMapper
+from field_mapper import FieldMapper
 
 field_map = {
     "name": "full_name",
@@ -147,8 +160,17 @@ print("Output:", processed_data)
 print("Error:",mapper.error)
 ```
 8. Get Nested Data
+Access nested data structures using dot notation and array indexing.
+
+**How it works:**
+- Use the `position` parameter in the field definition to specify the path to nested data
+- Supports dot notation for nested objects: `"phone.phone_two"`
+- Supports array indexing: `"email[0]"`
+- Supports dynamic arrays: `"year_salary[].year"` extracts field from all array items
+- Supports combined notation: `"income[0].Jan"` for nested objects in arrays
+
 ```python
-from field_mapper.mapper import FieldMapper
+from field_mapper import FieldMapper
 
 field_map = {
     "name": "full_name",
