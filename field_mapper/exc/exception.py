@@ -1,35 +1,21 @@
-from typing import List, Dict, Any
+from typing import Any
 
 
 class FieldValidationError(Exception):
-    """Custom Base exception for field validation errors."""
+    """
+    Base exception for field validation errors.
+
+    Attributes:
+        issues: List of validation error messages
+        problematic_data: The data that failed validation
+    """
     def __init__(self, message: str, issues: Any = None, problematic_data: Any = None):
         super().__init__(message)
-        self.issues = issues
+        self.issues = issues if issues is not None else []
         self.problematic_data = problematic_data
 
 
 class DuplicateDataError(FieldValidationError):
-    """Custom exception for duplicate data errors."""
-    pass
-
-
-class MissingFieldError(FieldValidationError):
-    """Exception raised when required fields are missing."""
-    pass
-
-
-class InvalidTypeError(FieldValidationError):
-    """Exception raised when fields have incorrect types."""
-    pass
-
-
-class InvalidLengthError(FieldValidationError):
-    """Exception raised when fields exceed the maximum length."""
-    pass
-
-
-class CustomValidationError(FieldValidationError):
-    """Exception raised when custom validation fails."""
+    """Exception raised when duplicate data entries are detected."""
     pass
 
