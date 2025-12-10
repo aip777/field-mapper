@@ -9,14 +9,12 @@ This example demonstrates error handling for:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "email": "contact_email",
     "department": "dept"
 }
 
-# Field definitions
 fields = {
     "name": {
         "type": str,
@@ -35,17 +33,15 @@ fields = {
     }
 }
 
-# Data with duplicates
 data = [
     {"name": "Alice", "email": "alice@example.com", "department": "Engineering"},
     {"name": "Bob", "email": "bob@example.com", "department": "Sales"},
-    {"name": "Alice", "email": "alice@example.com", "department": "Engineering"},  # DUPLICATE
+    {"name": "Alice", "email": "alice@example.com", "department": "Engineering"},
     {"name": "Charlie", "email": "charlie@example.com", "department": "Marketing"},
-    {"name": "Bob", "email": "bob@example.com", "department": "Sales"},  # DUPLICATE
-    {"name": "Bob", "email": "bob@example.com", "department": "Sales"},  # DUPLICATE AGAIN
+    {"name": "Bob", "email": "bob@example.com", "department": "Sales"},
+    {"name": "Bob", "email": "bob@example.com", "department": "Sales"},
 ]
 
-# Process data with duplicate detection
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data, skip_duplicate=True)
 

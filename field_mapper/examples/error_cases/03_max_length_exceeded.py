@@ -10,7 +10,6 @@ This example demonstrates error handling for:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "username": "user_name",
     "bio": "biography",
@@ -18,53 +17,51 @@ field_map = {
     "settings": "user_settings"
 }
 
-# Field definitions with max_length constraints
 fields = {
     "username": {
         "type": str,
-        "max_length": 20,  # Max 20 characters
+        "max_length": 20,
         "required_field": True,
         "required_value": True
     },
     "bio": {
         "type": str,
-        "max_length": 100,  # Max 100 characters
+        "max_length": 100,
         "required_field": True,
         "required_value": True
     },
     "tags": {
         "type": list,
-        "max_length": 5,  # Max 5 items in list
+        "max_length": 5,
         "required_field": True,
         "required_value": True
     },
     "settings": {
         "type": dict,
-        "max_length": 3,  # Max 3 keys in dict
+        "max_length": 3,
         "required_field": True,
         "required_value": True
     }
 }
 
-# Data exceeding max_length limits
 data = [
     {
-        "username": "this_is_a_very_long_username_that_exceeds_limit",  # ERROR: 51 chars > 20
+        "username": "this_is_a_very_long_username_that_exceeds_limit",
         "bio": "Software engineer with 10 years of experience",
         "tags": ["python", "java"],
         "settings": {"theme": "dark"}
     },
     {
         "username": "alice",
-        "bio": "A" * 150,  # ERROR: 150 chars > 100
-        "tags": ["python", "javascript", "docker", "kubernetes", "aws", "react"],  # ERROR: 6 items > 5
+        "bio": "A" * 150,
+        "tags": ["python", "javascript", "docker", "kubernetes", "aws", "react"],
         "settings": {"theme": "dark", "lang": "en"}
     },
     {
         "username": "bob",
         "bio": "DevOps engineer",
         "tags": ["docker"],
-        "settings": {  # ERROR: 4 keys > 3
+        "settings": {
             "theme": "light",
             "lang": "fr",
             "timezone": "UTC",
@@ -73,7 +70,6 @@ data = [
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

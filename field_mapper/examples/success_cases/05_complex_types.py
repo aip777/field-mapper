@@ -10,7 +10,6 @@ This example demonstrates:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "tags": "user_tags",
@@ -19,7 +18,6 @@ field_map = {
     "contacts": "contact_info"
 }
 
-# Field validation for complex types
 fields = {
     "name": {
         "type": str,
@@ -29,30 +27,29 @@ fields = {
     },
     "tags": {
         "type": list,
-        "max_length": 10,         # Max 10 tags allowed
+        "max_length": 10,
         "required_field": True,
         "required_value": True
     },
     "metadata": {
         "type": dict,
-        "max_length": 5,          # Max 5 keys in dict
+        "max_length": 5,
         "required_field": True,
-        "required_value": False   # Can be empty dict
+        "required_value": False
     },
     "emails": {
         "type": list,
-        "max_length": 5,          # Max 5 emails
+        "max_length": 5,
         "required_field": True,
         "required_value": True
     },
     "contacts": {
         "type": dict,
-        "required_field": False,  # Optional
+        "required_field": False,
         "required_value": False
     }
 }
 
-# Data with complex types
 data = [
     {
         "name": "Alice Johnson",
@@ -71,7 +68,7 @@ data = [
     {
         "name": "Bob Smith",
         "tags": ["java", "kubernetes"],
-        "metadata": {},           # Empty dict is valid
+        "metadata": {},
         "emails": ["bob@company.org"],
         "contacts": {
             "linkedin": "bob-smith"
@@ -85,11 +82,9 @@ data = [
             "level": "Lead"
         },
         "emails": ["charlie@example.com"]
-        # contacts is optional, can be missing
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

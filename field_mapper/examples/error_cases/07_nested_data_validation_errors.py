@@ -15,7 +15,6 @@ def validate_email(value: str) -> bool:
     return "@" in value and "." in value
 
 
-# Field mapping with nested paths
 field_map = {
     "name": "full_name",
     "email[0]": "primary_email",
@@ -24,7 +23,6 @@ field_map = {
     "salary[0].amount": "current_salary"
 }
 
-# Field validation - validates SOURCE structure
 fields = {
     "name": {
         "type": str,
@@ -33,45 +31,44 @@ fields = {
         "required_value": True
     },
     "email": {
-        "type": list,  # Source must be a list
+        "type": list,
         "position": "email[0]",
         "required_field": True,
         "required_value": True,
-        "custom": validate_email  # Validates extracted value
+        "custom": validate_email
     },
     "phone": {
-        "type": dict,  # Source must be a dict
+        "type": dict,
         "position": "phone.mobile",
         "required_field": True,
         "required_value": True
     },
     "address": {
-        "type": dict,  # Source must be a dict
+        "type": dict,
         "position": "address.city",
         "required_field": True,
         "required_value": True
     },
     "salary": {
-        "type": list,  # Source must be a list
+        "type": list,
         "position": "salary[0].amount",
         "required_field": True,
         "required_value": True
     }
 }
 
-# Data with nested validation errors
 data = [
     {
         "name": "Alice",
-        "email": "alice@example.com",  # ERROR: Should be list, not string
+        "email": "alice@example.com",
         "phone": {"mobile": "555-0001"},
         "address": {"city": "New York"},
         "salary": [{"amount": 95000}]
     },
     {
         "name": "Bob",
-        "email": ["invalid-email"],  # ERROR: Custom validation fails (no @ or .)
-        "phone": "+1-555-1001",  # ERROR: Should be dict, not string
+        "email": ["invalid-email"],
+        "phone": "+1-555-1001",
         "address": {"city": "San Francisco"},
         "salary": [{"amount": 110000}]
     },
@@ -79,19 +76,17 @@ data = [
         "name": "Charlie",
         "email": ["charlie@example.com"],
         "phone": {"mobile": "555-2001"},
-        # ERROR: Missing address (required field)
         "salary": [{"amount": 85000}]
     },
     {
         "name": "Diana",
         "email": ["diana@example.com"],
-        "phone": {"home": "555-3001"},  # Has phone dict, but no 'mobile' key
-        "address": {"street": "123 Main"},  # Has address dict, but no 'city' key
-        "salary": "75000"  # ERROR: Should be list, not string
+        "phone": {"home": "555-3001"},
+        "address": {"street": "123 Main"},
+        "salary": "75000"
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

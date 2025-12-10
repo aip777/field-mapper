@@ -17,18 +17,15 @@ def validate_email(value: str) -> bool:
     return "@" in value and "." in value
 
 
-# Field mapping with nested paths
 field_map = {
     "name": "full_name",
-    "email[0]": "primary_email",              # Extract first email from array
-    "phone.mobile": "mobile_number",          # Extract from nested dict
-    "address.city": "city",                   # Extract nested property
-    "salary[0].amount": "current_salary",     # Extract from nested array of dicts
-    "skills[].name": "skill_names"            # Extract field from all array items
+    "email[0]": "primary_email",
+    "phone.mobile": "mobile_number",
+    "address.city": "city",
+    "salary[0].amount": "current_salary",
+    "skills[].name": "skill_names"
 }
 
-# Field validation rules
-# Note: 'type' validates the SOURCE data structure, not extracted value
 fields = {
     "name": {
         "type": str,
@@ -38,40 +35,39 @@ fields = {
         "required_value": True
     },
     "email": {
-        "type": list,                          # Source is a list
-        "position": "email[0]",                # Extract first item
-        "max_length": 3,                       # Max 3 emails in source
+        "type": list,
+        "position": "email[0]",
+        "max_length": 3,
         "required_field": True,
         "required_value": True,
-        "custom": validate_email               # Validate extracted value
+        "custom": validate_email
     },
     "phone": {
-        "type": dict,                          # Source is a dict
-        "position": "phone.mobile",            # Extract mobile field
+        "type": dict,
+        "position": "phone.mobile",
         "required_field": True,
         "required_value": True
     },
     "address": {
-        "type": dict,                          # Source is a dict
-        "position": "address.city",            # Extract city field
+        "type": dict,
+        "position": "address.city",
         "required_field": True,
         "required_value": True
     },
     "salary": {
-        "type": list,                          # Source is a list
-        "position": "salary[0].amount",        # Extract amount from first salary
+        "type": list,
+        "position": "salary[0].amount",
         "required_field": True,
         "required_value": True
     },
     "skills": {
-        "type": list,                          # Source is a list
-        "position": "skills[].name",           # Extract name from all items
+        "type": list,
+        "position": "skills[].name",
         "required_field": True,
         "required_value": True
     }
 }
 
-# Complex nested data
 data = [
     {
         "name": "Alice Johnson",
@@ -117,7 +113,6 @@ data = [
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

@@ -11,7 +11,6 @@ This example demonstrates error handling for:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "email": "contact_email",
@@ -22,49 +21,47 @@ field_map = {
     "is_active": "active_status"
 }
 
-# All fields require values
 fields = {
     "name": {
         "type": str,
         "required_field": True,
-        "required_value": True  # Cannot be empty string
+        "required_value": True
     },
     "email": {
         "type": str,
         "required_field": True,
-        "required_value": True  # Cannot be empty string
+        "required_value": True
     },
     "bio": {
         "type": str,
         "required_field": True,
-        "required_value": True  # Cannot be empty string
+        "required_value": True
     },
     "tags": {
         "type": list,
         "required_field": True,
-        "required_value": True  # Cannot be empty list
+        "required_value": True
     },
     "settings": {
         "type": dict,
         "required_field": True,
-        "required_value": True  # Cannot be empty dict
+        "required_value": True
     },
     "score": {
         "type": int,
         "required_field": True,
-        "required_value": True  # 0 is OK! Not considered empty
+        "required_value": True
     },
     "is_active": {
         "type": bool,
         "required_field": True,
-        "required_value": True  # False is OK! Not considered empty
+        "required_value": True
     }
 }
 
-# Data with empty required values
 data = [
     {
-        "name": "",  # ERROR: Empty string
+        "name": "",
         "email": "alice@example.com",
         "bio": "Developer",
         "tags": ["python"],
@@ -75,10 +72,10 @@ data = [
     {
         "name": "Bob",
         "email": "bob@example.com",
-        "bio": "",  # ERROR: Empty string
-        "tags": [],  # ERROR: Empty list
+        "bio": "",
+        "tags": [],
         "settings": {"lang": "en"},
-        "score": 0,  # OK! 0 is valid
+        "score": 0,
         "is_active": True
     },
     {
@@ -86,14 +83,14 @@ data = [
         "email": "charlie@example.com",
         "bio": "Engineer",
         "tags": ["java"],
-        "settings": {},  # ERROR: Empty dict
+        "settings": {},
         "score": 50,
-        "is_active": False  # OK! False is valid
+        "is_active": False
     },
     {
         "name": "Diana",
-        "email": "",  # ERROR: Empty string
-        "bio": "",  # ERROR: Empty string
+        "email": "",
+        "bio": "",
         "tags": ["react", "vue"],
         "settings": {"notifications": True},
         "score": 0,
@@ -101,7 +98,6 @@ data = [
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

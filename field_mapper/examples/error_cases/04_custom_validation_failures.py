@@ -16,7 +16,6 @@ def validate_email(value: str) -> bool:
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     is_valid = bool(re.match(pattern, value))
     if not is_valid:
-        # This won't show in error, but False will trigger "Custom validation failed"
         pass
     return is_valid
 
@@ -47,7 +46,6 @@ def validate_username(value: str):
     return True
 
 
-# Field mapping
 field_map = {
     "username": "user_name",
     "email": "contact_email",
@@ -55,7 +53,6 @@ field_map = {
     "age": "user_age"
 }
 
-# Fields with custom validators
 fields = {
     "username": {
         "type": str,
@@ -83,34 +80,32 @@ fields = {
     }
 }
 
-# Data with custom validation failures
 data = [
     {
-        "username": "ab",  # ERROR: Too short (< 3 chars)
+        "username": "ab",
         "email": "alice@example.com",
         "phone": "1234567890",
         "age": 30
     },
     {
-        "username": "1bob",  # ERROR: Starts with number
-        "email": "invalid-email",  # ERROR: Missing @ and domain
-        "phone": "123",  # ERROR: Too few digits
+        "username": "1bob",
+        "email": "invalid-email",
+        "phone": "123",
         "age": 25
     },
     {
-        "username": "charlie@user",  # ERROR: Contains @
+        "username": "charlie@user",
         "email": "charlie@example.com",
         "phone": "(555) 123-4567",
-        "age": 200  # ERROR: Age > 150
+        "age": 200
     },
     {
         "username": "diana",
-        "email": "diana@test",  # ERROR: Invalid domain
-        "age": -5  # ERROR: Age < 0
+        "email": "diana@test",
+        "age": -5
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

@@ -8,7 +8,6 @@ This example demonstrates error handling for:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "age": "user_age",
@@ -17,61 +16,58 @@ field_map = {
     "metadata": "user_metadata"
 }
 
-# Field definitions with specific types
 fields = {
     "name": {
-        "type": str,  # Expects string
+        "type": str,
         "required_field": True,
         "required_value": True
     },
     "age": {
-        "type": int,  # Expects integer
+        "type": int,
         "required_field": True,
         "required_value": True
     },
     "email": {
-        "type": str,  # Expects string
+        "type": str,
         "required_field": True,
         "required_value": True
     },
     "tags": {
-        "type": list,  # Expects list
+        "type": list,
         "required_field": True,
         "required_value": True
     },
     "metadata": {
-        "type": dict,  # Expects dict
+        "type": dict,
         "required_field": True,
         "required_value": True
     }
 }
 
-# Data with type mismatches
 data = [
     {
         "name": "Alice",
-        "age": "30",  # ERROR: String instead of int
+        "age": "30",
         "email": "alice@example.com",
         "tags": ["python", "java"],
         "metadata": {"level": "senior"}
     },
     {
-        "name": 12345,  # ERROR: Int instead of string
+        "name": 12345,
         "age": 25,
         "email": "bob@example.com",
-        "tags": "python,java",  # ERROR: String instead of list
+        "tags": "python,java",
         "metadata": {"level": "junior"}
     },
     {
         "name": "Charlie",
         "age": 30,
-        "email": ["charlie@example.com"],  # ERROR: List instead of string
+        "email": ["charlie@example.com"],
         "tags": ["react"],
-        "metadata": ["key", "value"]  # ERROR: List instead of dict
+        "metadata": ["key", "value"]
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

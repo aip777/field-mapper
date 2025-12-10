@@ -19,9 +19,8 @@ def validate_email(value: str) -> bool:
 
 def validate_phone(value: str) -> bool:
     """Custom phone validator - returns boolean"""
-    # Accept formats: 1234567890, 123-456-7890, (123) 456-7890
     if not value:
-        return True  # Optional field, empty is ok
+        return True
     clean = re.sub(r'[\s\-\(\)]', '', value)
     return clean.isdigit() and 10 <= len(clean) <= 15
 
@@ -31,7 +30,6 @@ def validate_age(value: int) -> bool:
     return 0 < value < 150
 
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "email": "contact_email",
@@ -39,7 +37,6 @@ field_map = {
     "age": "user_age"
 }
 
-# Field validation with custom validators
 fields = {
     "name": {
         "type": str,
@@ -52,32 +49,30 @@ fields = {
         "max_length": 100,
         "required_field": True,
         "required_value": True,
-        "custom": validate_email  # Custom validation
+        "custom": validate_email
     },
     "phone": {
         "type": str,
         "max_length": 20,
         "required_field": False,
         "required_value": False,
-        "custom": validate_phone  # Custom validation
+        "custom": validate_phone
     },
     "age": {
         "type": int,
         "required_field": True,
         "required_value": True,
-        "custom": validate_age  # Custom validation
+        "custom": validate_age
     }
 }
 
-# Valid data with various phone formats
 data = [
     {"name": "Alice", "email": "alice@example.com", "phone": "1234567890", "age": 30},
     {"name": "Bob", "email": "bob@company.org", "phone": "123-456-7890", "age": 25},
     {"name": "Charlie", "email": "charlie@test.co.uk", "phone": "(555) 123-4567", "age": 40},
-    {"name": "Diana", "email": "diana@email.com", "age": 28}  # No phone (optional)
+    {"name": "Diana", "email": "diana@email.com", "age": 28}
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

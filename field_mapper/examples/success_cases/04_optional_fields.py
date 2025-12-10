@@ -10,7 +10,6 @@ This example demonstrates:
 
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "email": "contact_email",
@@ -21,46 +20,44 @@ field_map = {
     "notes": "additional_notes"
 }
 
-# Field validation with various optional configurations
 fields = {
     "name": {
         "type": str,
-        "required_field": True,   # Field must be present
-        "required_value": True    # Field must have a non-empty value
+        "required_field": True,
+        "required_value": True
     },
     "email": {
         "type": str,
-        "required_field": True,   # Field must be present
-        "required_value": True    # Field must have a non-empty value
+        "required_field": True,
+        "required_value": True
     },
     "phone": {
         "type": str,
-        "required_field": False,  # Field can be absent
-        "required_value": False   # If present, can be empty
+        "required_field": False,
+        "required_value": False
     },
     "age": {
         "type": int,
-        "required_field": True,   # Field must be present
-        "required_value": False   # Can be 0 (falsy but valid)
+        "required_field": True,
+        "required_value": False
     },
     "score": {
         "type": int,
-        "required_field": False,  # Field can be absent
-        "required_value": False   # Can be 0
+        "required_field": False,
+        "required_value": False
     },
     "is_active": {
         "type": bool,
-        "required_field": True,   # Field must be present
-        "required_value": False   # Can be False (falsy but valid)
+        "required_field": True,
+        "required_value": False
     },
     "notes": {
         "type": str,
-        "required_field": False,  # Field can be absent
-        "required_value": False   # Can be empty string
+        "required_field": False,
+        "required_value": False
     }
 }
 
-# Data with various optional/falsy values
 data = [
     {
         "name": "Alice",
@@ -74,31 +71,26 @@ data = [
     {
         "name": "Bob",
         "email": "bob@example.com",
-        # phone is missing (optional field)
-        "age": 0,              # 0 is valid (newborn baby!)
-        "score": 0,            # 0 score is valid
-        "is_active": False,    # False is valid
-        "notes": ""            # Empty string is valid
+        "age": 0,
+        "score": 0,
+        "is_active": False,
+        "notes": ""
     },
     {
         "name": "Charlie",
         "email": "charlie@example.com",
-        "phone": "",           # Empty string is valid for optional value
+        "phone": "",
         "age": 25,
-        # score is missing (optional field)
         "is_active": True
-        # notes is missing (optional field)
     },
     {
         "name": "Diana",
         "email": "diana@example.com",
         "age": 28,
         "is_active": False,
-        # Multiple optional fields missing
     }
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

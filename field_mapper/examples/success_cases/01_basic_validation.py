@@ -10,7 +10,6 @@ This example demonstrates:
 
 from field_mapper import FieldMapper
 
-# Define field mapping (source -> target)
 field_map = {
     "name": "full_name",
     "email": "contact_email",
@@ -18,7 +17,6 @@ field_map = {
     "age": "user_age"
 }
 
-# Define validation rules
 fields = {
     "name": {
         "type": str,
@@ -35,7 +33,7 @@ fields = {
     "phone": {
         "type": str,
         "max_length": 15,
-        "required_field": False,  # Optional field
+        "required_field": False,
         "required_value": False
     },
     "age": {
@@ -45,14 +43,12 @@ fields = {
     }
 }
 
-# Valid data
 data = [
     {"name": "Alice Johnson", "email": "alice@example.com", "phone": "1234567890", "age": 30},
-    {"name": "Bob Smith", "email": "bob@example.com", "age": 25},  # phone is optional
-    {"name": "Charlie Brown", "email": "charlie@example.com", "phone": "9876543210", "age": 35}
+    {"name": "Bob Smith", "email": "bob@example.com", "age": 25},
+    {"name": "Charlie Brown", "email": "charlie@example.com", "phone": "9876543210", "age": 0}
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 

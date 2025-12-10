@@ -1,22 +1,11 @@
-"""
-Example 1: Missing Required Fields (ERROR CASE)
-
-This example demonstrates error handling for:
-- Missing required fields
-- Detailed error messages showing which fields are missing
-"""
-
 from field_mapper import FieldMapper
 
-# Field mapping
 field_map = {
     "name": "full_name",
     "email": "contact_email",
     "phone": "phone_number",
     "department": "dept"
 }
-
-# All fields are required
 fields = {
     "name": {
         "type": str,
@@ -30,24 +19,21 @@ fields = {
     },
     "phone": {
         "type": str,
-        "required_field": True,  # Required!
+        "required_field": True,
         "required_value": True
     },
     "department": {
         "type": str,
-        "required_field": True,  # Required!
+        "required_field": True,
         "required_value": True
     }
 }
-
-# Data with missing required fields
 data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},  # Missing department
-    {"name": "Bob", "email": "bob@example.com"},  # Missing phone and department
-    {"email": "charlie@example.com", "phone": "5555555555", "department": "IT"}  # Missing name
+    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
+    {"name": "Bob", "email": "bob@example.com"},
+    {"email": "charlie@example.com", "phone": "5555555555", "department": "IT"}
 ]
 
-# Process data
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 
