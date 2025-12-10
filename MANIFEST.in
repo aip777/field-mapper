@@ -1,0 +1,13 @@
+include README.md
+include setup.cfg
+include pyproject.toml
+
+recursive-include field_mapper *.py
+recursive-include field_mapper/exc *.py
+
+exclude field_mapper/test/*
+exclude field_mapper/examples/*
+
+global-exclude __pycache__
+global-exclude *.py[co]
+global-exclude .DS_Store
