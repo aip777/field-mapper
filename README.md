@@ -1,245 +1,636 @@
-### Field Mapper: Documentation
-Field Mapper is a Python library designed for validating, mapping, and transforming data fields. It is particularly useful for integrating third-party systems, ensuring compatibility when third-party fields and internal system fields differ. The library supports type checking, length constraints, optional fields, custom validation rules, and seamless data transformation for structured data validation.
-### Installation
-Install the library using pip
+# Field Mapper
+
+Field Mapper is a Python library that helps you validate and transform data. Perfect for when you need to work with APIs, clean up messy data, or make sure your data is in the right format.
+
+[![Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
+---
+
+## Table of Contents
+
+- [What does it do?](#what-does-it-do)
+- [Installation](#installation)
+- [Quick Example](#quick-example)
+- [Key Features](#key-features)
+- [Core Concepts](#core-concepts)
+- [Usage Guide](#usage-guide)
+  - [Basic Validation](#1-basic-validation)
+  - [Custom Validators](#2-custom-validators)
+  - [Working with Nested Data](#3-working-with-nested-data)
+  - [Optional Fields](#4-optional-fields)
+  - [Lists and Dictionaries](#5-lists-and-dictionaries)
+  - [Finding Duplicates](#6-finding-duplicates)
+- [Field Definition Reference](#field-definition-reference)
+- [Error Handling](#error-handling)
+- [Common Use Cases](#common-use-cases)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+
+---
+
+## Why Field Mapper?
+
+Field Mapper solves common data integration challenges:
+
+- **Third-Party APIs**: Transform external API responses to your internal format
+- **Data Validation**: Ensure data quality before processing
+- **Field Mapping**: Rename fields from source to target naming conventions
+- **Nested Structures**: Extract values from deeply nested JSON/dict structures
+- **Type Safety**: Validate data types and constraints
+- **Error Reporting**: Get detailed, actionable error messages
+
+**Before Field Mapper:**
+```python
+# Manual validation - tedious and error-prone
+for item in data:
+    if 'name' not in item or not item['name']:
+        raise ValueError("Missing name")
+    if not isinstance(item['age'], int):
+        raise ValueError("Invalid age type")
+    if len(item['email']) > 100:
+        raise ValueError("Email too long")
+    # ... and so on
+```
+
+**With Field Mapper:**
+```python
+fields = {
+    "name": {"type": str, "required_field": True, "required_value": True},
+    "age": {"type": int, "required_field": True},
+    "email": {"type": str, "max_length": 100}
+}
+result = FieldMapper(fields, field_map).process(data)
+```
+
+---
+
+## Installation
+
 ```bash
 pip install field-mapper
 ```
 
-### Quick Start
-1. Define Fields
-Create a field map dictionary.
-Also, Create a fields dictionary to define the rules for your data fields.
+Requires Python 3.7 or higher.
+
+---
+
+## Quick Example
+
+Here's how simple it is to use:
+
 ```python
+from field_mapper import FieldMapper
+
+# Tell it what fields you expect and what to rename them to
 field_map = {
     "name": "full_name",
-    "email": "contact_email",
-    "phone": "mobile_number",
-    "income": "monthly_income"
+    "email": "contact_email"
 }
+
+# Set up validation rules
 fields = {
-    "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
-    "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True},
-    "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
+    "name": {
+        "type": str,
+        "max_length": 50,
+        "required_field": True,
+        "required_value": True
+    },
+    "email": {
+        "type": str,
+        "max_length": 100,
+        "required_field": True,
+        "required_value": True
+    }
+}
+
+# Your data
+data = [
+    {"name": "Alice Johnson", "email": "alice@example.com"},
+    {"name": "Bob Smith", "email": "bob@example.com"}
+]
+
+# Process it!
+mapper = FieldMapper(fields, field_map)
+result = mapper.process(data)
+
+print(result)
+# [{'full_name': 'Alice Johnson', 'contact_email': 'alice@example.com'},
+#  {'full_name': 'Bob Smith', 'contact_email': 'bob@example.com'}]
+```
+
+---
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Type Validation** | Validate `str`, `int`, `bool`, `list`, `dict`, `float` |
+| **Field Mapping** | Rename fields from source to target format |
+| **Nested Extraction** | Extract data from complex nested structures using dot notation and array indexing |
+| **Custom Validators** | Add your own validation logic for any field |
+| **Length Constraints** | Enforce `max_length` on strings, lists, and dicts |
+| **Optional Fields** | Flexible required/optional configurations |
+| **Duplicate Detection** | Automatically detect and handle duplicate entries |
+| **Rich Error Messages** | Detailed, actionable error reporting |
+| **Zero Dependencies** | Pure Python with no external dependencies |
+
+---
+
+## Core Concepts
+
+### The Two Dictionaries
+
+You need two things to use Field Mapper:
+
+**1. field_map** - Tells it how to rename fields
+```python
+field_map = {
+    "old_name": "new_name"
 }
 ```
 
-2. Prepare Data
-The input should be a list of dictionaries.
+**2. fields** - Tells it how to validate fields
 ```python
-data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
-]
+fields = {
+    "old_name": {
+        "type": str,              # What type should it be?
+        "max_length": 100,        # How long can it be?
+        "required_field": True,   # Must it exist?
+        "required_value": True,   # Can it be empty?
+        "custom": my_function,    # Custom validation (optional)
+        "position": "path"        # For nested data (optional)
+    }
+}
 ```
 
-3. Data Process
-Use the process method to check and transform the data.
+### Important: Empty vs Valid Values
+
+Field Mapper knows the difference between "empty" and valid but falsy values:
+
+**These are considered empty:**
+- `None`
+- `""` (empty string)
+- `[]` (empty list)
+- `{}` (empty dict)
+
+**These are NOT empty (they're valid!):**
+- `0` - Zero is a valid number
+- `False` - False is a valid boolean
+- `" "` - Spaces are valid
+
+This matters when you set `required_value: True`. A field with value `0` or `False` will pass validation.
+
+---
+
+## Usage Guide
+
+### 1. Basic Validation
+
+Let's validate some user data:
 
 ```python
 from field_mapper import FieldMapper
 
 field_map = {
     "name": "full_name",
-    "email": "contact_email",
-    "phone": "mobile_number",
-    "income": "monthly_income"
+    "age": "user_age",
+    "email": "contact_email"
 }
 
 fields = {
-    "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
-    "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True},
-    "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
+    "name": {
+        "type": str,
+        "max_length": 50,
+        "required_field": True,
+        "required_value": True
+    },
+    "age": {
+        "type": int,
+        "required_field": True,
+        "required_value": True
+    },
+    "email": {
+        "type": str,
+        "max_length": 100,
+        "required_field": True,
+        "required_value": True
+    }
 }
 
 data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
+    {"name": "Alice", "age": 30, "email": "alice@example.com"},
+    {"name": "Bob", "age": 25, "email": "bob@example.com"}
 ]
 
 mapper = FieldMapper(fields, field_map)
-processed_data = mapper.process(data)
-print(processed_data)
-print(mapper.error)
+result = mapper.process(data)
 
+if mapper.error:
+    print("Something went wrong:", mapper.error)
+else:
+    print("Success!", result)
 ```
 
-4. Custom Validation
-Define custom validation logic for specific fields. Custom validators can either:
-- Return `True` if valid, `False` if invalid
-- Raise an exception with a descriptive error message
+### 2. Custom Validators
 
-**Option 1: Return boolean**
+Want to add your own validation rules? Easy:
+
 ```python
 def validate_email(value: str) -> bool:
+    """Check if email looks valid"""
     return "@" in value and "." in value
-```
 
-**Option 2: Raise exception**
-```python
-def validate_email(value):
-    import re
-    if not re.match(r"[^@]+@[^@]+\.[^@]+", value):
-        raise ValueError(f"Invalid email address: {value}")
-```
+def validate_age(value: int) -> bool:
+    """Check if age is reasonable"""
+    return 0 < value < 150
 
-Add the custom validator in the field definition:
-```python
-from field_mapper import FieldMapper
-
-field_map = {
-    "name": "full_name",
-    "email": "contact_email",
-    "phone": "mobile_number",
-    "income": "monthly_income"
-}
 fields = {
-    "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
-    "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True, "custom": validate_email},
-    "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "required_field": True, "required_value":False}
+    "email": {
+        "type": str,
+        "custom": validate_email  # Add your function here
+    },
+    "age": {
+        "type": int,
+        "custom": validate_age
+    }
+}
+```
+
+You can either return `True`/`False` or raise an exception with a custom error message:
+
+```python
+def validate_email(value: str):
+    """Raises an error if invalid"""
+    if "@" not in value:
+        raise ValueError(f"Email must contain @: {value}")
+    return True
+```
+
+### 3. Working with Nested Data
+
+Got complex JSON structures? No problem:
+
+```python
+# Your complex data
+data = [{
+    "email": ["alice@work.com", "alice@personal.com"],
+    "phone": {
+        "mobile": "+1-555-0001",
+        "home": "+1-555-0002"
+    },
+    "address": {
+        "street": "123 Main St",
+        "city": "New York",
+        "zip": "10001"
+    }
+}]
+
+# Extract what you need
+field_map = {
+    "email[0]": "primary_email",      # Get the first email
+    "phone.mobile": "mobile_number",   # Get the mobile number
+    "address.city": "city"             # Get the city
 }
 
-data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "bob@invalid", "phone": "453543535", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
-]
+fields = {
+    "email": {
+        "type": list,                  # The source must be a list
+        "position": "email[0]",        # Extract the first item
+        "required_field": True
+    },
+    "phone": {
+        "type": dict,                  # The source must be a dict
+        "position": "phone.mobile",    # Extract the mobile field
+        "required_field": True
+    },
+    "address": {
+        "type": dict,
+        "position": "address.city",
+        "required_field": True
+    }
+}
+
 mapper = FieldMapper(fields, field_map)
-processed_data = mapper.process(data)
-print(processed_data)
-print(mapper.error)
+result = mapper.process(data)
 
+print(result[0])
+# {'primary_email': 'alice@work.com', 'mobile_number': '+1-555-0001', 'city': 'New York'}
 ```
 
-5. Optional Fields
-Mark fields as optional with required_field: False. 
+**Position syntax you can use:**
+- `field[0]` - Get first item from a list
+- `field.property` - Get a nested property
+- `field[0].property` - Get property from first list item
+- `field[].property` - Get property from ALL list items
+
+**Key thing to remember:** The `type` checks the source structure (is it a list or dict?), and `custom` validators check the extracted value.
+
+### 4. Optional Fields
+
+Sometimes fields are optional. You have two controls:
+
 ```python
 fields = {
-    "phone": {"type": str, "max_length": 15, "required_field": False},
+    "name": {
+        "type": str,
+        "required_field": True,   # Field MUST exist
+        "required_value": True    # Field CANNOT be empty
+    },
+    "phone": {
+        "type": str,
+        "required_field": False,  # Field CAN be missing
+        "required_value": False   # If present, CAN be empty
+    },
+    "age": {
+        "type": int,
+        "required_field": True,   # Field MUST exist
+        "required_value": False   # But can be 0 (zero is valid!)
+    }
 }
 
-```
-
-6. Required Value
-If required_value=True is set, their presence is mandatory and values can't be empty. 
-```python
-fields = {"email": {"type": str, "max_length": 100, "required_field": True, "required_value":True}
-
-```
-
-7. Skip Duplicates Data
-If skip_duplicate=True is set, Skip duplicate data. Raises:DuplicateDataError: If duplicate entries are found.
-```python
-from field_mapper import FieldMapper
-
-field_map = {
-    "name": "full_name",
-    "email": "contact_email",
-    "phone": "mobile_number",
-    "income": "monthly_income"
-}
-fields = {
-    "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
-    "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True},
-    "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
-}
+# All these are valid:
 data = [
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "888888", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "444444", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "444444", "income":0}
+    {"name": "Alice", "phone": "555-1234", "age": 30},  # All present
+    {"name": "Bob", "age": 25},                         # Phone missing (OK)
+    {"name": "Charlie", "phone": "", "age": 0},         # Empty phone and 0 age (OK)
 ]
-mapper = FieldMapper(fields, field_map)
-processed_data = mapper.process(data, skip_duplicate=True)
-print("Output:", processed_data)
-print("Error:",mapper.error)
 ```
-8. Get Nested Data
-Access nested data structures using dot notation and array indexing.
 
-**How it works:**
-- Use the `position` parameter in the field definition to specify the path to nested data
-- Supports dot notation for nested objects: `"phone.phone_two"`
-- Supports array indexing: `"email[0]"`
-- Supports dynamic arrays: `"year_salary[].year"` extracts field from all array items
-- Supports combined notation: `"income[0].Jan"` for nested objects in arrays
+**Quick guide:**
+
+| What you want | required_field | required_value |
+|---------------|----------------|----------------|
+| Field must exist and have a value | `True` | `True` |
+| Field must exist but can be empty | `True` | `False` |
+| Field is optional but must have value if present | `False` | `True` |
+| Field is completely optional | `False` | `False` |
+
+### 5. Lists and Dictionaries
+
+You can validate lists and dicts too:
 
 ```python
-from field_mapper import FieldMapper
-
-field_map = {
-    "name": "full_name",
-    "email[0]": "contact_email",
-    "phone.phone_two": "mobile_number",
-    "income[0].Jan": "monthly_income",
-    "year_salary[].year": "salary"
+fields = {
+    "tags": {
+        "type": list,
+        "max_length": 10,      # Max 10 items
+        "required_value": True
+    },
+    "metadata": {
+        "type": dict,
+        "max_length": 5,       # Max 5 keys
+        "required_value": False  # Can be empty {}
+    }
 }
+
 data = [
     {
-        "name": "Alice",
-        "email": ["alice@example.com", "alice2@example.com"],
-        "phone": {"phone_one": '22222', "phone_two": "2332432"},
-        "income": [{"Jan": 2000, "Feb": 3000}],
-        "year_salary": [
-            {"year": "2020", "Jan": 2000, "Feb": 3000},
-            {"year": "2021", "Jan": 2000, "Feb": 3000}
-        ]
+        "tags": ["python", "javascript", "docker"],
+        "metadata": {"level": "senior"}
+    },
+    {
+        "tags": ["java"],
+        "metadata": {}  # Empty dict is OK
     }
 ]
-fields = {
-    "name": {"type": str, "position": "name", "max_length": 50, "required_field": True, "required_value": True},
-    "email": {"type": list, "position": "email[0]", "max_length": 100, "required_field": True, "required_value": True},
-    "phone": {"type": dict, "position": "phone.phone_two", "required_field": True, "required_value": True},
-    "income": {"type": list, "position": "income[0].Jan", "required_field": True, "required_value": True},
-    "year_salary": {"type": list, "position": "year_salary[].year", "required_field": True, "required_value": True}
-}
-mapper = FieldMapper(fields=fields, field_map=field_map)
-processed_data = mapper.process(data, skip_duplicate=True)
-print("Output:", processed_data)
-print("Error:",mapper.error)
-
-#Output: [{'full_name': 'Alice', 'contact_email': 'alice@example.com', 'mobile_number': '2332432', 'monthly_income': 2000, 'salary': ['2020', '2021']}]
-#Error: []
 ```
 
-### Example usage
+### 6. Finding Duplicates
+
+Need to catch duplicate entries?
 
 ```python
-from field_mapper import FieldMapper
+data = [
+    {"name": "Alice", "email": "alice@example.com"},
+    {"name": "Bob", "email": "bob@example.com"},
+    {"name": "Alice", "email": "alice@example.com"},  # Duplicate!
+]
 
+mapper = FieldMapper(fields, field_map)
+result = mapper.process(data, skip_duplicate=True)
 
-def validate_email(value: str) -> bool:
-    return "@" in value and "." in value
+if mapper.error:
+    print("Found duplicates!")
+```
 
+---
+
+## Field Definition Reference
+
+Here's everything you can put in a field definition:
+
+```python
+fields = {
+    "field_name": {
+        "type": str,              # Required - the data type
+        "max_length": 100,        # Optional - max length for str/list/dict
+        "required_field": True,   # Optional - default is True
+        "required_value": True,   # Optional - default is True
+        "custom": validator_func, # Optional - your validation function
+        "position": "path"        # Optional - for nested data
+    }
+}
+```
+
+**Available types:** `str`, `int`, `float`, `bool`, `list`, `dict`
+
+---
+
+## Error Handling
+
+Always check for errors after processing:
+
+```python
+mapper = FieldMapper(fields, field_map)
+result = mapper.process(data)
+
+if mapper.error:
+    print("Validation failed:")
+    for error in mapper.error:
+        print(f"  - {error}")
+    # result will be an empty list []
+else:
+    print(f"Success! Processed {len(result)} records")
+    # Do something with result
+    for record in result:
+        save_to_database(record)
+```
+
+**Common error messages you might see:**
+
+```
+Missing required field: 'email'
+Invalid type for field 'age': expected int, got str
+Field 'name' (str) exceeds max length of 50 (current: 75)
+Required value missing or empty for field: 'email'
+Custom validation failed for field: 'email'
+Duplicate data detected
+```
+
+---
+
+## Common Use Cases
+
+### Use Case 1: Working with External APIs
+
+```python
+# API returns this format
+api_response = {
+    "firstName": "Alice",
+    "lastName": "Johnson",
+    "emailAddress": "alice@example.com"
+}
+
+# Convert to your format
 field_map = {
-    "name": "full_name",
-    "email": "contact_email",
-    "phone": "mobile_number",
-    "income": "monthly_income"
+    "firstName": "first_name",
+    "lastName": "last_name",
+    "emailAddress": "email"
 }
 
 fields = {
-    "name": {"type": str, "max_length": 50, "required_field": True, "required_value":True},
-    "email": {"type": str, "max_length": 100, "required_field": True, "required_value":True, "custom": validate_email},
-    "phone": {"type": str, "max_length": 15, "required_field": False, "required_value":False},
-    "income": {"type": int, "max_length": 15, "required_field": True, "required_value":False}
+    "firstName": {"type": str, "max_length": 50},
+    "lastName": {"type": str, "max_length": 50},
+    "emailAddress": {"type": str, "max_length": 100}
 }
 
-data = [
-    {"name": "Alice", "email": "alice@example.com", "phone": "1234567890"},
-    {"name": "Bob", "email": "charlieexample.com", "phone": "453543535", "income":0},
-    {"name": "Charlie", "email": "charlie@example.com", "phone": "34534523", "income":0}
-]
 mapper = FieldMapper(fields, field_map)
-processed_data = mapper.process(data)
-print(processed_data)
-print(mapper.error)
+result = mapper.process([api_response])
+# {'first_name': 'Alice', 'last_name': 'Johnson', 'email': 'alice@example.com'}
 ```
 
-## Contributors
-- [Md Lutfor Rahman](https://github.com/shifat151)
+### Use Case 2: Validating Form Data
+
+```python
+def validate_password(value: str) -> bool:
+    """Password needs 8+ chars with uppercase, lowercase, and number"""
+    if len(value) < 8:
+        return False
+    has_upper = any(c.isupper() for c in value)
+    has_lower = any(c.islower() for c in value)
+    has_digit = any(c.isdigit() for c in value)
+    return has_upper and has_lower and has_digit
+
+fields = {
+    "username": {
+        "type": str,
+        "max_length": 20,
+        "required_value": True
+    },
+    "email": {
+        "type": str,
+        "max_length": 100,
+        "required_value": True,
+        "custom": validate_email
+    },
+    "password": {
+        "type": str,
+        "max_length": 100,
+        "required_value": True,
+        "custom": validate_password
+    }
+}
+```
+
+### Use Case 3: Cleaning Up Data
+
+```python
+# Before: messy data with inconsistent fields
+messy_data = [
+    {"usr_nm": "Alice", "emp_id": 123},
+    {"usr_nm": "Bob", "emp_id": 456}
+]
+
+# After: clean, standardized data
+field_map = {
+    "usr_nm": "user_name",
+    "emp_id": "employee_id"
+}
+
+mapper = FieldMapper(fields, field_map)
+clean_data = mapper.process(messy_data)
+# [{'user_name': 'Alice', 'employee_id': 123}, ...]
+```
+
+---
+
+## Troubleshooting
+
+### "Missing required field" but the field exists
+
+**Problem:** Field names are case-sensitive
+
+```python
+# Won't work - case mismatch
+data = {"Name": "Alice"}
+fields = {"name": {...}}  # Lowercase
+
+# Fix - match exactly
+data = {"name": "Alice"}
+fields = {"name": {...}}
+```
+
+### "Invalid type" for nested data
+
+**Problem:** You're checking the wrong type
+
+```python
+# Wrong - source is a list, not a string
+data = {"emails": ["alice@example.com"]}
+fields = {
+    "emails": {
+        "type": str,  # This checks the SOURCE, which is a list!
+        "position": "emails[0]"
+    }
+}
+
+# Right - check the source type
+fields = {
+    "emails": {
+        "type": list,  # Source is a list
+        "position": "emails[0]"  # Extract string
+    }
+}
+```
+
+### Custom validator not working
+
+**Problem:** Don't call the function, just pass it
+
+```python
+# Wrong - calling the function
+fields = {
+    "email": {
+        "custom": validate_email() 
+    }
+}
+
+# Right - pass the function
+fields = {
+    "email": {
+        "custom": validate_email 
+    }
+}
+```
+
+---
+
+## Contributing
+
+Want to help make Field Mapper better? Great!
+
+- **Found a bug?** [Open an issue](https://github.com/aip777/field-mapper/issues)
+- **Have an idea?** Tell us about it in an issue
+- **Want to contribute code?** Fork the repo and submit a pull request
+
+### Contributors:
+- [Ariful Islam Palash](https://github.com/aip777) - Creator
+- [Md Lutfor Rahman](https://github.com/shifat151) - Core Contributor
+
+---
+
+**Links:**
+- [PyPI Package](https://pypi.org/project/field-mapper/)
+- [GitHub Repository](https://github.com/aip777/field-mapper)
+- [Report Issues](https://github.com/aip777/field-mapper/issues)
