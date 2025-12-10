@@ -19,7 +19,11 @@ class FieldMapper:
     def validate(self, data: Dict[str, Any]) -> None:
         """
         Validate fields in a single data dictionary based on the defined rules in `fields`.
-        Supports both direct field access and nested field access via 'position' parameter.
+
+        When position is specified:
+        - Type/length validation is done on the SOURCE field in data
+        - Custom validators are applied to the EXTRACTED value from position
+        - This allows validating the source structure while applying business rules to extracted values
         """
 
         errors = []
@@ -31,48 +35,51 @@ class FieldMapper:
             custom_validator = constraints.get("custom")
             position = constraints.get("position")
 
-            # Use position if specified, otherwise use field name directly
             if position:
-                value = self.extract_value(data, position)
-                field_path = position
+                if '[' in position:
+                    source_field = position.split('[')[0]
+                elif '.' in position:
+                    source_field = position.split('.')[0]
+                else:
+                    source_field = position
             else:
-                value = data.get(field)
-                field_path = field
+                source_field = field
 
-            # Check for missing fields
-            if is_required_field and field not in data and not position:
+            value = data.get(source_field)
+
+            if is_required_field and source_field not in data:
                 errors.append(f"Missing required field: '{field}'")
                 continue
 
-            # Skip validation for optional fields if not present
             if not is_required_field and value is None:
                 continue
 
-            # Check if the value is missing when required
-            # Properly handle falsy values: 0, False, empty string, empty list, empty dict
             if is_required_value and self._is_empty_value(value):
-                errors.append(f"Required value missing or empty for field: '{field}' (path: '{field_path}')")
+                errors.append(f"Required value missing or empty for field: '{field}'")
 
-            # Validate type
             if value is not None and expected_type and not isinstance(value, expected_type):
                 actual_type = type(value).__name__
                 expected_type_name = expected_type.__name__ if hasattr(expected_type, '__name__') else str(expected_type)
                 errors.append(f"Invalid type for field '{field}': expected {expected_type_name}, got {actual_type}")
 
-            # Validate max length for strings, lists, and other sequences
             if value is not None and max_length:
                 if hasattr(value, '__len__'):
                     if len(value) > max_length:
                         value_type = type(value).__name__
                         errors.append(f"Field '{field}' ({value_type}) exceeds max length of {max_length} (current: {len(value)})")
 
-            # Apply custom validation if defined
-            if value is not None and custom_validator and callable(custom_validator):
-                try:
-                    if not custom_validator(value):
-                        errors.append(f"Custom validation failed for field: '{field}'")
-                except Exception as e:
-                    errors.append(f"Custom validation error for field '{field}': {str(e)}")
+            if custom_validator and callable(custom_validator):
+                if position:
+                    validation_value = self.extract_value(data, position)
+                else:
+                    validation_value = value
+
+                if validation_value is not None:
+                    try:
+                        if not custom_validator(validation_value):
+                            errors.append(f"Custom validation failed for field: '{field}'")
+                    except Exception as e:
+                        errors.append(f"Custom validation error for field '{field}': {str(e)}")
 
         if errors:
             raise FieldValidationError("Validation errors occurred", errors, [data])
@@ -161,7 +168,7 @@ class FieldMapper:
         """
         Log validation error details to the error list.
         """
-        formatted_issues = "; ".join(exc.issues)  # Join issues into a single line
+        formatted_issues = "; ".join(exc.issues)
         formatted_error = (
             f"--- Error Details ---\n"
             f"Type: {exc.__class__.__name__}\n"
