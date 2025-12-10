@@ -50,7 +50,6 @@ for item in data:
         raise ValueError("Invalid age type")
     if len(item['email']) > 100:
         raise ValueError("Email too long")
-    # ... and so on
 ```
 
 **With Field Mapper:**
@@ -82,13 +81,11 @@ Here's how simple it is to use:
 ```python
 from field_mapper import FieldMapper
 
-# Tell it what fields you expect and what to rename them to
 field_map = {
     "name": "full_name",
     "email": "contact_email"
 }
 
-# Set up validation rules
 fields = {
     "name": {
         "type": str,
@@ -104,13 +101,11 @@ fields = {
     }
 }
 
-# Your data
 data = [
     {"name": "Alice Johnson", "email": "alice@example.com"},
     {"name": "Bob Smith", "email": "bob@example.com"}
 ]
 
-# Process it!
 mapper = FieldMapper(fields, field_map)
 result = mapper.process(data)
 
@@ -154,12 +149,12 @@ field_map = {
 ```python
 fields = {
     "old_name": {
-        "type": str,              # What type should it be?
-        "max_length": 100,        # How long can it be?
-        "required_field": True,   # Must it exist?
-        "required_value": True,   # Can it be empty?
-        "custom": my_function,    # Custom validation (optional)
-        "position": "path"        # For nested data (optional)
+        "type": str,
+        "max_length": 100,
+        "required_field": True,
+        "required_value": True,
+        "custom": my_function,
+        "position": "path"
     }
 }
 ```
@@ -248,7 +243,7 @@ def validate_age(value: int) -> bool:
 fields = {
     "email": {
         "type": str,
-        "custom": validate_email  # Add your function here
+        "custom": validate_email
     },
     "age": {
         "type": int,
@@ -272,7 +267,6 @@ def validate_email(value: str):
 Got complex JSON structures? No problem:
 
 ```python
-# Your complex data
 data = [{
     "email": ["alice@work.com", "alice@personal.com"],
     "phone": {
@@ -286,22 +280,21 @@ data = [{
     }
 }]
 
-# Extract what you need
 field_map = {
-    "email[0]": "primary_email",      # Get the first email
-    "phone.mobile": "mobile_number",   # Get the mobile number
-    "address.city": "city"             # Get the city
+    "email[0]": "primary_email",
+    "phone.mobile": "mobile_number",
+    "address.city": "city"
 }
 
 fields = {
     "email": {
-        "type": list,                  # The source must be a list
-        "position": "email[0]",        # Extract the first item
+        "type": list,
+        "position": "email[0]",
         "required_field": True
     },
     "phone": {
-        "type": dict,                  # The source must be a dict
-        "position": "phone.mobile",    # Extract the mobile field
+        "type": dict,
+        "position": "phone.mobile",
         "required_field": True
     },
     "address": {
@@ -334,26 +327,25 @@ Sometimes fields are optional. You have two controls:
 fields = {
     "name": {
         "type": str,
-        "required_field": True,   # Field MUST exist
-        "required_value": True    # Field CANNOT be empty
+        "required_field": True,
+        "required_value": True
     },
     "phone": {
         "type": str,
-        "required_field": False,  # Field CAN be missing
-        "required_value": False   # If present, CAN be empty
+        "required_field": False,
+        "required_value": False
     },
     "age": {
         "type": int,
-        "required_field": True,   # Field MUST exist
-        "required_value": False   # But can be 0 (zero is valid!)
+        "required_field": True,
+        "required_value": False
     }
 }
 
-# All these are valid:
 data = [
-    {"name": "Alice", "phone": "555-1234", "age": 30},  # All present
-    {"name": "Bob", "age": 25},                         # Phone missing (OK)
-    {"name": "Charlie", "phone": "", "age": 0},         # Empty phone and 0 age (OK)
+    {"name": "Alice", "phone": "555-1234", "age": 30},
+    {"name": "Bob", "age": 25},
+    {"name": "Charlie", "phone": "", "age": 0},
 ]
 ```
 
@@ -374,13 +366,13 @@ You can validate lists and dicts too:
 fields = {
     "tags": {
         "type": list,
-        "max_length": 10,      # Max 10 items
+        "max_length": 10,
         "required_value": True
     },
     "metadata": {
         "type": dict,
-        "max_length": 5,       # Max 5 keys
-        "required_value": False  # Can be empty {}
+        "max_length": 5,
+        "required_value": False
     }
 }
 
@@ -391,7 +383,7 @@ data = [
     },
     {
         "tags": ["java"],
-        "metadata": {}  # Empty dict is OK
+        "metadata": {}
     }
 ]
 ```
@@ -404,7 +396,7 @@ Need to catch duplicate entries?
 data = [
     {"name": "Alice", "email": "alice@example.com"},
     {"name": "Bob", "email": "bob@example.com"},
-    {"name": "Alice", "email": "alice@example.com"},  # Duplicate!
+    {"name": "Alice", "email": "alice@example.com"},
 ]
 
 mapper = FieldMapper(fields, field_map)
@@ -423,12 +415,12 @@ Here's everything you can put in a field definition:
 ```python
 fields = {
     "field_name": {
-        "type": str,              # Required - the data type
-        "max_length": 100,        # Optional - max length for str/list/dict
-        "required_field": True,   # Optional - default is True
-        "required_value": True,   # Optional - default is True
-        "custom": validator_func, # Optional - your validation function
-        "position": "path"        # Optional - for nested data
+        "type": str,
+        "max_length": 100,
+        "required_field": True,
+        "required_value": True,
+        "custom": validator_func,
+        "position": "path"
     }
 }
 ```
@@ -564,7 +556,7 @@ clean_data = mapper.process(messy_data)
 ```python
 # Won't work - case mismatch
 data = {"Name": "Alice"}
-fields = {"name": {...}}  # Lowercase
+fields = {"name": {...}}
 
 # Fix - match exactly
 data = {"name": "Alice"}
@@ -580,7 +572,7 @@ fields = {"name": {...}}
 data = {"emails": ["alice@example.com"]}
 fields = {
     "emails": {
-        "type": str,  # This checks the SOURCE, which is a list!
+        "type": str,
         "position": "emails[0]"
     }
 }
@@ -588,8 +580,8 @@ fields = {
 # Right - check the source type
 fields = {
     "emails": {
-        "type": list,  # Source is a list
-        "position": "emails[0]"  # Extract string
+        "type": list,
+        "position": "emails[0]"
     }
 }
 ```
